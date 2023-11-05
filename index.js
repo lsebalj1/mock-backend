@@ -3,12 +3,15 @@ import cors from "cors"
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
+function fn_rentify(req, res){
+    console.log("Rentify je pozvan");
+    return res.json({ status: 'zelena' });
+}
 
 // definiranje backend rute
-app.get('/banana', (req, res) => {
-    res.json({ status: 'zelena' });
-});
+app.get('/rentify', fn_rentify);
 
 // pokretanje procesa web servera 
 let port = 3001
