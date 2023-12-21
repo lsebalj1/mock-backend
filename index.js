@@ -1,58 +1,78 @@
-import express from "express"
-import cors from "cors"
+import express from "express";
+import cors from "cors";
+import smjestajiModel from "./model/smjestajiModel.js";
+import najamModel from "./model/najamModel.js";
 
 const app = express();
+const router = express.Router();
+
 app.use(cors());
 app.use(express.json());
+app.use("/api/rentify", router);
 
-let apartmani = [
-    { id: 1, name: 'Apartment A', description: 'Modern apartment with a view', price: 1500 },
-    { id: 2, name: 'Apartment B', description: 'Cozy studio near downtown', price: 1000 },
-    { id: 3, name: 'Apartment C', description: 'Spacious loft with city skyline', price: 2000 }
-  ];
-
-app.get("/", (req, res) => {
-    return res.json({ status: 'zeleno' });
-})
-
-function fn_rentify(req, res){
-    console.log("Rentify je pozvan");
-    return res.json({ status: 'Rentify je pozvan' });
-}
-
-// definiranje backend rute
-app.get("/rentify", fn_rentify);
-
-function fn_get_apartments(req, res){
-    return res.json(apartmani);
-}
-
-app.get("/rentify/apartmani", fn_get_apartments);
-
-function fn_create_apartment(req, res){
-    try {
-        const { name, description, price } = req.body;
-        const noviApp = { name, description, price };
-        apartmani.push(noviApp);
-        return res.json(noviApp);
-      } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'Internal Server Error' });
-      }
-}
-
-app.post("/rentify/apartmani", fn_create_apartment);
-
-/**POST
- * {
-  "name": "New Apartment",
-  "description": "A beautiful new apartment",
-  "price": 1200
-}
- */
-
-// pokretanje procesa web servera 
-let port = 3001
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+router.get("/", (req, res) => {
+  console.log("Rentify je pozvan");
+  return res.json({ status: 'Rentify je pozvan' });
 });
+
+router.get("/smjestaji", (req, res) => {
+  return res.status(200).json({ smjestaji: smjestajiModel.data }).end();
+});
+
+router.get("/najam", (req, res) => {
+  return res.status(200).json({ najam: najamModel.data }).end();
+});
+
+router.post("/novi_smjestaj", (req, res) => {
+  try {
+    const { name, tip, description, price, slika, zvjezdice, brojOsoba } = req.body;
+    const noviSmjestaj = { name, tip, description, price, slika, zvjezdice, brojOsoba };
+    console.log("POST request data:", req.body);
+    smjestajiModel.data.push(noviSmjestaj);
+    return res.status(201).json({ smjestaj: noviSmjestaj }).end();
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error', details: error.message }).end();
+  }
+});
+
+router.post("/novi_najam", (req, res) => {
+  try {
+    const { name, tip, description, price, slika, brojOsoba } = req.body;
+    const noviNajam = { name, tip, description, price, slika, brojOsoba };
+    console.log("POST request data:", req.body);
+    najamModel.data.push(noviNajam);
+    return res.status(201).json({ najam: noviNajam }).end();
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error', details: error.message }).end();
+  }
+});
+
+// pokretanje procesa web servera
+let port = 3001;
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
+
+// POST request example raw json
+/*
+{
+  "name": "New Apartment",
+  "tip": "apartman",
+  "description": "A beautiful new apartment",
+  "price": 1200,
+  "slika": "putanja/do/slike.jpg",
+  "zvjezdice": 5,
+  "brojOsoba": 3
+}
+
+{
+  "name": "New Rental",
+  "tip": "garsonijera",
+  "description": "A cozy rental space",
+  "price": 1000,
+  "slika": "putanja/do/slike_rentala.jpg",
+  "brojOsoba": 2
+}
+*/
